@@ -132,39 +132,92 @@ plt.show()
 #Manchester
 
 # Initialize variables
-levels = []
 X = []
 Y = []
-current_level = 0
 
-# Manchester Logic: 1 → from low to high, 0 → from high to low
+# Codificación Manchester:
+# 0 → Alto a Bajo (1 → 0)
+# 1 → Bajo a Alto (0 → 1)
 
-for bit in signal:
+for i, bit in enumerate(signal):
+    t0 = i          # inicio del bit
+    t_half = i + 0.5  # mitad del bit (transición)
+    t1 = i + 1      # fin del bit
+
     if bit == "0":
-        levels.append([1, 0]) # 1 -> 0
-    else:   # bit == "1"
-        levels.append([0, 1]) # 0 -> 1
-        
+        # Bit 0 → Alto (1) a Bajo (0)
+        X.extend([t0, t_half, t_half, t1])
+        Y.extend([1, 1, 0, 0])
+    else:
+        # Bit 1 → Bajo (0) a Alto (1)
+        X.extend([t0, t_half, t_half, t1])
+        Y.extend([0, 0, 1, 1])
 
-# Create step points
-for i, level in enumerate(levels):
-    X.extend([i / 2, (i + 1) / 2])
-    Y.extend([level, level])
-
-# Plot configuration
-plt.figure(figsize=(8, 3))
-plt.step(X, Y, where='post')
+# Graficar
+plt.figure(figsize=(10, 3))
+plt.step(X, Y, where='post', linewidth=2, color='blue')
 plt.ylim(-0.5, 1.5)
-plt.title("Signal Manchester")
-plt.xlabel("Time")
-plt.ylabel("Voltage Level")
+plt.yticks([0, 1], ['Bajo', 'Alto'])
+plt.xticks(range(len(signal) + 1))
 plt.grid(True)
+plt.xlabel("Tiempo")
+plt.ylabel("Nivel de voltaje")
+plt.title("Codificación Manchester")
 
-# Add bit labels at the center of each bit period
-for idx, bit in enumerate(signal):
-    plt.text(idx + 0.5, 1.2, bit, ha='center', va='center', fontsize=8)
+# Mostrar los bits encima del gráfico
+for i, bit in enumerate(signal):
+    plt.text(i + 0.5, 1.2, bit, ha='center', va='center', fontsize=10)
 
+plt.tight_layout()
 plt.show()
-
 # Código Diferencial
 
+signal_2 = "0100110011"
+X = []
+Y = []
+
+# Nivel inicial como en la imagen: empieza en 1
+current_level = 1
+
+for i, bit in enumerate(signal_2):
+    t_start = i
+    t_mid = i + 0.5
+    t_end = i + 1
+
+    if bit == "0":
+        # Transición al inicio
+        current_level = 1 - current_level
+        X.extend([t_start, t_mid])
+        Y.extend([current_level, current_level])
+
+        # Transición a la mitad
+        current_level = 1 - current_level
+        X.extend([t_mid, t_end])
+        Y.extend([current_level, current_level])
+    else:  # bit == "1"
+        # Sin transición al inicio
+        X.extend([t_start, t_mid])
+        Y.extend([current_level, current_level])
+
+        # Transición a la mitad
+        current_level = 1 - current_level
+        X.extend([t_mid, t_end])
+        Y.extend([current_level, current_level])
+
+# Graficar la señal
+plt.figure(figsize=(10, 3))
+plt.step(X, Y, where='post', linewidth=2, color='darkblue')
+plt.ylim(-0.5, 1.5)
+plt.yticks([0, 1], ['0', '1'])
+plt.xticks(range(len(signal_2) + 1))
+plt.grid(True)
+plt.xlabel("Tiempo")
+plt.ylabel("Nivel de voltaje")
+plt.title("Codificación Diferencial (IEEE 802.5)")
+
+# Etiquetar los bits
+for i, bit in enumerate(signal_2):
+    plt.text(i + 0.5, 1.3, bit, ha='center', va='center', fontsize=11)
+
+plt.tight_layout()
+plt.show()
