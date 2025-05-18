@@ -148,7 +148,7 @@ for bit in signal:
 
 # Create step points
 for i, level in enumerate(levels):
-    X.extend([i / 2, (i + 1) / 2])
+    X.extend([i / 2, (i + 1) / 2]) 
     Y.extend([level, level])
 
 # Plot configuration
