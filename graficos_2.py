@@ -1,223 +1,207 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.widgets import Button
 
+# Define the signals to be visualized
 signal = "111100010"
-X = []
-Y = []
-
-# NRZ-L: 1 → low (0), 0 → high (1)
-levels = [1 if bit == '1' else 0 for bit in signal]
-
-# Create step points (tipo step)
-for i, level in enumerate(levels):
-    X.extend([i, i + 1])
-    Y.extend([level, level])
-
-plt.figure(figsize=(8, 3))
-plt.step(X, Y, where='post')
-plt.ylim(-0.5, 1)
-plt.title("Signal NRZ-L")
-plt.xlabel("Time")
-plt.ylabel("Voltage")
-plt.grid(True)
-plt.show()
-
-#NRZ-I
-
-# Initialize variables
-levels = []
-X = []
-Y = []
-current_level = 0
-
-# NRZ-I Logic: 1 → transition, 0 → no transition
-for bit in signal:
-    if bit == "1":
-        current_level = 1 - current_level  # Toggle level
-    levels.append(current_level)
-
-# Create step points (transitions exactly at the integer point)
-for i, level in enumerate(levels):
-    X.extend([i, i + 1])
-    Y.extend([level, level])
-
-# Plot configuration
-plt.figure(figsize=(8, 3))
-plt.step(X, Y, where='post')
-plt.ylim(-0.5, 1.5)
-plt.title("Signal NRZ-I")
-plt.xlabel("Time")
-plt.ylabel("Voltage Level")
-plt.grid(True)
-
-# Add bit labels
-for idx, bit in enumerate(signal):
-    plt.text(idx + 0.5, 1.2, bit, ha='center', va='center', fontsize=8)
-
-plt.show()
-
-#Bipolar AMI
-
-# Initialize variables
-levels = []
-X = []
-Y = []
-
-# Bipolar AMI Logic: 0 → no transition, 1 → alternate from +1 to -1
-last_non_zero = -1  # Start with -1
-
-for bit in signal:
-    if bit == "1":
-        last_non_zero *= -1  # Alternate between +1 and -1
-        levels.append(last_non_zero)
-    else:
-        levels.append(0)  # No voltage for "0"
-
-# Create step points (transitions exactly at the integer point)
-for i, level in enumerate(levels):
-    X.extend([i, i + 1])
-    Y.extend([level, level])
-
-# Plot configuration
-plt.figure(figsize=(8, 3))
-plt.step(X, Y, where='post')
-plt.ylim(-1.5, 1.5)
-plt.title("Signal Bipolar AMI")
-plt.xlabel("Time")
-plt.ylabel("Voltage Level")
-plt.grid(True)
-
-# Add bit labels
-for idx, bit in enumerate(signal):
-    plt.text(idx + 0.5, 1.2, bit, ha='center', va='center', fontsize=8)
-plt.show()
-
-#Pseudoternario
-
-# Initialize variables
-levels = []
-X = []
-Y = []
-current_level = 0
-
-# Pseudoternario Logic: 1 → no transition (0), 0 → alternate from +1 to -1
-last_non_zero = -1  # Start with -1
-
-for bit in signal:
-    if bit == "0":
-        last_non_zero *= -1  # Alternate between +1 and -1
-        levels.append(last_non_zero)
-    else:   # bit == "1"
-        levels.append(0)  # No voltage for "1"
-
-# Create step points (transitions exactly at the integer point)
-for i, level in enumerate(levels):
-    X.extend([i, i + 1])
-    Y.extend([level, level])
-
-# Plot configuration
-plt.figure(figsize=(8, 3))
-plt.step(X, Y, where='post')
-plt.ylim(-0.5, 1.5)
-plt.title("Signal Pseudoternario")
-plt.xlabel("Time")
-plt.ylabel("Voltage Level")
-plt.grid(True)
-
-# Add bit labels
-for idx, bit in enumerate(signal):
-    plt.text(idx + 0.5, 1.2, bit, ha='center', va='center', fontsize=8)
-plt.show()
-
-#Manchester
-
-# Initialize variables
-X = []
-Y = []
-
-# Codificación Manchester:
-# 0 → Alto a Bajo (1 → 0)
-# 1 → Bajo a Alto (0 → 1)
-
-for i, bit in enumerate(signal):
-    t0 = i          # inicio del bit
-    t_half = i + 0.5  # mitad del bit (transición)
-    t1 = i + 1      # fin del bit
-
-    if bit == "0":
-        # Bit 0 → Alto (1) a Bajo (0)
-        X.extend([t0, t_half, t_half, t1])
-        Y.extend([1, 1, 0, 0])
-    else:
-        # Bit 1 → Bajo (0) a Alto (1)
-        X.extend([t0, t_half, t_half, t1])
-        Y.extend([0, 0, 1, 1])
-
-# Graficar
-plt.figure(figsize=(10, 3))
-plt.step(X, Y, where='post', linewidth=2, color='blue')
-plt.ylim(-0.5, 1.5)
-plt.yticks([0, 1], ['Bajo', 'Alto'])
-plt.xticks(range(len(signal) + 1))
-plt.grid(True)
-plt.xlabel("Tiempo")
-plt.ylabel("Nivel de voltaje")
-plt.title("Codificación Manchester")
-
-# Mostrar los bits encima del gráfico
-for i, bit in enumerate(signal):
-    plt.text(i + 0.5, 1.2, bit, ha='center', va='center', fontsize=10)
-
-plt.tight_layout()
-plt.show()
-# Código Diferencial
-
 signal_2 = "0100110011"
-X = []
-Y = []
+plots = []  # List of plotting functions
+titles = [] # Titles for each graph
 
-# Nivel inicial como en la imagen: empieza en 1
-current_level = 1
+# === Plotting Functions ===
 
-for i, bit in enumerate(signal_2):
-    t_start = i
-    t_mid = i + 0.5
-    t_end = i + 1
+# Plot NRZ-L signal
+def plot_nrz_l(signal, ax):
+    X, Y = [], []   # Initialize X and Y coordinates
+    # Define voltage levels based on the bits
+    levels = [1 if bit == '1' else 0 for bit in signal] 
+    # Create step points for visualization
+    for i, level in enumerate(levels):
+        X.extend([i, i + 1])
+        Y.extend([level, level])
+    # Configure the graph
+    ax.step(X, Y, where='post')
+    ax.set_ylim(-0.5, 1.5)
+    ax.set_title("Signal NRZ-L")
+    ax.set_xlabel("Time")
+    ax.set_ylabel("Voltage Level")
+    ax.grid(True)
+    # Add bit labels on the plot
+    for idx, bit in enumerate(signal):
+        ax.text(idx + 0.5, 1.2, bit, ha='center', va='center', fontsize=8)
 
-    if bit == "0":
-        # Transición al inicio
-        current_level = 1 - current_level
-        X.extend([t_start, t_mid])
-        Y.extend([current_level, current_level])
+# Plot NRZ-I signal
+def plot_nrz_i(signal, ax):
+    X, Y = [], []
+    levels, current_level = [], 0
+    # Toggle voltage on bit "1"
+    for bit in signal:
+        if bit == "1":
+            current_level = 1 - current_level
+        levels.append(current_level)
+    # Create step points for visualization
+    for i, level in enumerate(levels):
+        X.extend([i, i + 1])
+        Y.extend([level, level])
+    # Configure the graph
+    ax.step(X, Y, where='post')
+    ax.set_ylim(-0.5, 1.5)
+    ax.set_title("Signal NRZ-I")
+    ax.set_xlabel("Time")
+    ax.set_ylabel("Voltage Level")
+    ax.grid(True)
+    # Add bit labels on the plot
+    for idx, bit in enumerate(signal):
+        ax.text(idx + 0.5, 1.2, bit, ha='center', va='center', fontsize=8)
 
-        # Transición a la mitad
-        current_level = 1 - current_level
-        X.extend([t_mid, t_end])
-        Y.extend([current_level, current_level])
-    else:  # bit == "1"
-        # Sin transición al inicio
-        X.extend([t_start, t_mid])
-        Y.extend([current_level, current_level])
+# Plot Bipolar AMI signal
+def plot_bipolar_ami(signal, ax):
+    X, Y = [], []
+    levels, last_non_zero = [], -1
+    # Alternate between +1 and -1 on bit "1"
+    for bit in signal:
+        if bit == "1":
+            last_non_zero *= -1
+            levels.append(last_non_zero)
+        else:
+            levels.append(0)
+    # Create step points for visualization
+    for i, level in enumerate(levels):
+        X.extend([i, i + 1])
+        Y.extend([level, level])
+    # Configure the graph
+    ax.step(X, Y, where='post')
+    ax.set_ylim(-1.5, 1.5)
+    ax.set_title("Signal Bipolar AMI")
+    ax.set_xlabel("Time")
+    ax.set_ylabel("Voltage Level")
+    ax.grid(True)
+    # Add bit labels on the plot
+    for idx, bit in enumerate(signal):
+        ax.text(idx + 0.5, 1.2, bit, ha='center', va='center', fontsize=8)
 
-        # Transición a la mitad
-        current_level = 1 - current_level
-        X.extend([t_mid, t_end])
-        Y.extend([current_level, current_level])
+# Plot Pseudoternary signal
+def plot_pseudoternary(signal, ax):
+    X, Y = [], []
+    levels, last_non_zero = [], -1
+    # Alternate between +1 and -1 on bit "0"
+    for bit in signal:
+        if bit == "0":
+            last_non_zero *= -1
+            levels.append(last_non_zero)
+        else:
+            levels.append(0)
+    for i, level in enumerate(levels):
+        X.extend([i, i + 1])
+        Y.extend([level, level])
+    # Configure the graph
+    ax.step(X, Y, where='post')
+    ax.set_ylim(-1.5, 1.5)
+    ax.set_title("Signal Pseudoternary")
+    ax.set_xlabel("Time")
+    ax.set_ylabel("Voltage Level")
+    ax.grid(True)
+    # Add bit labels on the plot
+    for idx, bit in enumerate(signal):
+        ax.text(idx + 0.5, 1.2, bit, ha='center', va='center', fontsize=8)
 
-# Graficar la señal
-plt.figure(figsize=(10, 3))
-plt.step(X, Y, where='post', linewidth=2, color='darkblue')
-plt.ylim(-0.5, 1.5)
-plt.yticks([0, 1], ['0', '1'])
-plt.xticks(range(len(signal_2) + 1))
-plt.grid(True)
-plt.xlabel("Tiempo")
-plt.ylabel("Nivel de voltaje")
-plt.title("Codificación Diferencial (IEEE 802.5)")
+# Plot Manchester signal
+def plot_manchester(signal, ax):
+    X, Y = [], []
+    # Manchester encoding: 0 -> High to Low, 1 -> Low to High
+    for i, bit in enumerate(signal):
+        t0, t_half, t1 = i, i + 0.5, i + 1
+        # Define the transition points
+        if bit == "0":
+            X.extend([t0, t_half, t_half, t1])
+            Y.extend([1, 1, 0, 0])
+        else:
+            X.extend([t0, t_half, t_half, t1])
+            Y.extend([0, 0, 1, 1])
+    # Configure the graph
+    ax.step(X, Y, where='post', linewidth=2, color='blue')
+    ax.set_ylim(-0.5, 1.5)
+    ax.set_title("Manchester")
+    ax.set_xlabel("Time")
+    ax.set_ylabel("Voltage Level")
+    ax.grid(True)
+    # Add bit labels on the plot
+    for idx, bit in enumerate(signal):
+        ax.text(idx + 0.5, 1.2, bit, ha='center', va='center', fontsize=8)
 
-# Etiquetar los bits
-for i, bit in enumerate(signal_2):
-    plt.text(i + 0.5, 1.3, bit, ha='center', va='center', fontsize=11)
+# Plot Differential Encoding (IEEE 802.5)
+def plot_differential(signal, ax):
+    X, Y = [], []
+    current_level = 1 # Start at level 1
+    # Iterate over each bit to determine transitions
+    for i, bit in enumerate(signal):
+        t_start, t_mid, t_end = i, i + 0.5, i + 1
+        if bit == "0":
+            # Toggle the level at the start and at the midpoint
+            current_level = 1 - current_level
+            X.extend([t_start, t_mid])
+            Y.extend([current_level, current_level])
+            current_level = 1 - current_level
+            X.extend([t_mid, t_end])
+            Y.extend([current_level, current_level])
+        else:
+            # Maintain the same level until the midpoint, then toggle
+            X.extend([t_start, t_mid])
+            Y.extend([current_level, current_level])
+            current_level = 1 - current_level
+            X.extend([t_mid, t_end])
+            Y.extend([current_level, current_level])
+    # Configure the graph
+    ax.step(X, Y, where='post', linewidth=2, color='blue')
+    ax.set_ylim(-0.5, 1.5)
+    ax.set_title("Differential Encoding (IEEE 802.5)")
+    ax.set_xlabel("Time")
+    ax.set_ylabel("Voltage Level")
+    ax.grid(True)
+    # Add bit labels on the plot
+    for idx, bit in enumerate(signal):
+        ax.text(idx + 0.5, 1.2, bit, ha='center', va='center', fontsize=8)
 
-plt.tight_layout()
+# Create main plot 
+fig, ax = plt.subplots()
+plt.subplots_adjust(bottom=0.2)
+
+# List of graphs
+plots = [
+    plot_nrz_l,
+    plot_nrz_i,
+    plot_bipolar_ami,
+    plot_pseudoternary,
+    plot_manchester,
+    plot_differential
+]
+
+# Initial state
+index = 0
+plots[index](signal, ax)
+
+#Navegation functions
+def next_plot(event):
+    global index
+    index = (index + 1) % len(plots)
+    ax.clear()
+    plots[index](signal, ax)
+    plt.draw()
+
+def prev_plot(event):
+    global index
+    index = (index - 1) % len(plots)
+    ax.clear()
+    plots[index](signal, ax)
+    plt.draw()
+
+# Navegation buttons
+ax_next = plt.axes([0.8, 0.05, 0.1, 0.075])
+ax_prev = plt.axes([0.1, 0.05, 0.1, 0.075])
+btn_next = Button(ax_next, 'Next')
+btn_prev = Button(ax_prev, 'Prev')
+btn_next.on_clicked(next_plot)
+btn_prev.on_clicked(prev_plot)
+
+# Show first plot
 plt.show()
